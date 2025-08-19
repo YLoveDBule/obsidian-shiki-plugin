@@ -1,133 +1,158 @@
-import { EditableCodeblock, loadPrism2, type OuterInfo } from 'src/general/EditableCodeblock'
+import { EditableCodeblock, loadPrism2, type OuterInfo } from 'src/general/EditableCodeblock';
 
 // add `obsidian` and `cm` dependencies
-import {
-	type App,
-	debounce,
-	type Editor,
-	loadPrism,
-	type MarkdownPostProcessorContext,
-	MarkdownRenderer,
-	MarkdownRenderChild,
-	MarkdownView,
-} from 'obsidian';
+import { type App, debounce, type Editor, loadPrism, type MarkdownPostProcessorContext, MarkdownRenderer, MarkdownRenderChild, MarkdownView } from 'obsidian';
+import { updateCopyButton } from 'src/general/copyButton';
+import { detectReadingMode, getCopyContainer } from 'src/general/viewMode';
 import { type Settings } from 'src/settings/Settings';
 import { EditorState } from '@codemirror/state';
 import { EditorView, type ViewUpdate } from '@codemirror/view';
-import { markdown } from "@codemirror/lang-markdown";
-import { basicSetup } from "@codemirror/basic-setup";
-import { getEmbedEditor, makeFakeController } from "src/EditableEditor"
+import { markdown } from '@codemirror/lang-markdown';
+import { basicSetup } from '@codemirror/basic-setup';
+import { getEmbedEditor, makeFakeController } from 'src/EditableEditor';
 
 import { LLOG } from 'src/general/LLogInOb';
 
-loadPrism2.fn = loadPrism
+loadPrism2.fn = loadPrism;
 
-const reg_code = /^((\s|>\s|-\s|\*\s|\+\s)*)(```+|~~~+)(\S*)(\s?.*)/
+const reg_code = /^((\s|>\s|-\s|\*\s|\+\s)*)(```+|~~~+)(\S*)(\s?.*)/;
 // const reg_code_noprefix = /^((\s)*)(```+|~~~+)(\S*)(\s?.*)/
 
 export default class EditableCodeblockInOb extends EditableCodeblock {
 	// 新增依赖
 	plugin: { app: App; settings: Settings };
 	ctx: MarkdownPostProcessorContext;
-	editor: Editor|null = null; // Cache to avoid focus changes. And the focus point may not be correct when creating the code block. It can be updated again when oninput
+	editor: Editor | null = null; // Cache to avoid focus changes. And the focus point may not be correct when creating the code block. It can be updated again when oninput
+	private copyBtn: HTMLButtonElement | undefined;
 
-	constructor(plugin: { app: App; settings: Settings }, language_old:string, source_old:string, el:HTMLElement, ctx:MarkdownPostProcessorContext) {
-		super(language_old, source_old, el)
+	constructor(plugin: { app: App; settings: Settings }, language_old: string, source_old: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) {
+		super(language_old, source_old, el);
 
 		// 新增依赖
-		this.plugin = plugin
-		this.ctx = ctx
-		this.editor = this.plugin.app.workspace.activeEditor?.editor ?? null
+		this.plugin = plugin;
+		this.ctx = ctx;
+		this.editor = this.plugin.app.workspace.activeEditor?.editor ?? null;
 		this.isReadingMode = ctx.containerEl.hasClass('markdown-preview-section') || ctx.containerEl.hasClass('markdown-preview-view');
-		this.isMarkdownRendered = !ctx.el.hasClass('.cm-preview-code-block') && ctx.el.hasClass('markdown-rendered') // TODO fix: can't check codeblock in Editor codeblock
-		this.settings = this.plugin.settings
+		this.isMarkdownRendered = !ctx.el.hasClass('.cm-preview-code-block') && ctx.el.hasClass('markdown-rendered'); // TODO fix: can't check codeblock in Editor codeblock
+		this.settings = this.plugin.settings;
 
 		// override
-		this.outerInfo = this.init_outerInfo2(language_old, source_old, el, ctx)
+		this.outerInfo = this.init_outerInfo2(language_old, source_old, el, ctx);
+	}
+
+	/**
+	 * 在阅读模式注入自定义复制按钮 `.sk-copy-btn`。
+	 *
+	 * @param container 要注入按钮的容器（如 `this.el` 或内部 `div.editable-codeblock`）
+	 * @param sourceText 要复制的源码文本
+	 */
+	ensureCopyButton(container: HTMLElement, sourceText: string): void {
+		// Unified reading mode detection and container selection
+		const shouldShow = detectReadingMode({ container: this.ctx.containerEl, el: this.ctx.el });
+		const target = getCopyContainer(container ?? this.el, this.settings.renderMode);
+		this.copyBtn = updateCopyButton({
+			container: target,
+			shouldShow,
+			getText: () => sourceText,
+			prevBtn: this.copyBtn,
+		});
 	}
 
 	/// TODO: fix: after edit, can't up/down to root editor
 	/// @param el: HTMLTextAreaElement|HTMLInputElement|HTMLPreElement
-	override enable_editarea_listener(el: HTMLElement, cb_tab?: (ev: KeyboardEvent)=>void, cb_up?: (ev: KeyboardEvent)=>void, cb_down?: (ev: KeyboardEvent)=>void): void {
-		if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el.isContentEditable)) return
+	override enable_editarea_listener(
+		el: HTMLElement,
+		cb_tab?: (ev: KeyboardEvent) => void,
+		cb_up?: (ev: KeyboardEvent) => void,
+		cb_down?: (ev: KeyboardEvent) => void,
+	): void {
+		if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el.isContentEditable)) return;
 
-		super.enable_editarea_listener(el, cb_tab, cb_up, cb_down) // `tab`
+		super.enable_editarea_listener(el, cb_tab, cb_up, cb_down); // `tab`
 
 		el.addEventListener('focus', () => {
 			// update_outEditor()
-			this.editor = this.plugin.app.workspace.activeEditor?.editor ?? null
-		})
+			this.editor = this.plugin.app.workspace.activeEditor?.editor ?? null;
+		});
 
 		// textarea - async part - keydown
-		el.addEventListener('keydown', (ev: KeyboardEvent) => { // ~~`tab` key~~、`arrow` key	
+		el.addEventListener('keydown', (ev: KeyboardEvent) => {
+			// ~~`tab` key~~、`arrow` key
 			if (ev.key == 'ArrowDown') {
-				if (cb_down) { cb_down(ev); return }
-				if (!this.editor) return
+				if (cb_down) {
+					cb_down(ev);
+					return;
+				}
+				if (!this.editor) return;
 
 				// check is the last line
 				if (el instanceof HTMLInputElement) {
 					// true
 				} else if (el instanceof HTMLTextAreaElement) {
-					const selectionEnd: number = el.selectionEnd
-					const textBefore = el.value.substring(0, selectionEnd)
-					const linesBefore = textBefore.split('\n')
-					if (linesBefore.length !== el.value.split('\n').length) return
+					const selectionEnd: number = el.selectionEnd;
+					const textBefore = el.value.substring(0, selectionEnd);
+					const linesBefore = textBefore.split('\n');
+					if (linesBefore.length !== el.value.split('\n').length) return;
 				} else {
 					// TODO
-					return
+					return;
 				}
-				
-				const sectionInfo = this.ctx.getSectionInfo(this.el);
-				if (!sectionInfo) return
 
-				ev.preventDefault() // safe: tested: `prevent` can still trigger `onChange`
-				const toLine = sectionInfo.lineEnd + 1
-				if (toLine > this.editor.lineCount() - 1) { // when codeblock on the last line
+				const sectionInfo = this.ctx.getSectionInfo(this.el);
+				if (!sectionInfo) return;
+
+				ev.preventDefault(); // safe: tested: `prevent` can still trigger `onChange`
+				const toLine = sectionInfo.lineEnd + 1;
+				if (toLine > this.editor.lineCount() - 1) {
+					// when codeblock on the last line
 					// strategy1: only move to end
 					// toLine--
 
 					// strategy2: insert a blank line
-					const lastLineIndex = this.editor.lineCount() - 1
-					const lastLineContent = this.editor.getLine(lastLineIndex)
-					this.editor.replaceRange("\n", { line: lastLineIndex, ch: lastLineContent.length })
+					const lastLineIndex = this.editor.lineCount() - 1;
+					const lastLineContent = this.editor.getLine(lastLineIndex);
+					this.editor.replaceRange('\n', { line: lastLineIndex, ch: lastLineContent.length });
 				}
-				this.editor.setCursor(toLine, 0)
-				this.editor.focus()
-				return
-			}
-			else if (ev.key == 'ArrowUp') {
-				if (cb_up) { cb_up(ev); return }
-				if (!this.editor) return
+				this.editor.setCursor(toLine, 0);
+				this.editor.focus();
+				return;
+			} else if (ev.key == 'ArrowUp') {
+				if (cb_up) {
+					cb_up(ev);
+					return;
+				}
+				if (!this.editor) return;
 
 				// check is the first line
 				if (el instanceof HTMLInputElement) {
 					// true
 				} else if (el instanceof HTMLTextAreaElement) {
-					const selectionStart: number = el.selectionStart
-					const textBefore = el.value.substring(0, selectionStart)
-					const linesBefore = textBefore.split('\n')
-					if (linesBefore.length !== 1) return
+					const selectionStart: number = el.selectionStart;
+					const textBefore = el.value.substring(0, selectionStart);
+					const linesBefore = textBefore.split('\n');
+					if (linesBefore.length !== 1) return;
 				} else {
 					// TODO
-					return
+					return;
 				}
 
 				const sectionInfo = this.ctx.getSectionInfo(this.el);
-				if (!sectionInfo) return
+				if (!sectionInfo) return;
 
-				ev.preventDefault() // safe: tested: `prevent` can still trigger `onChange`
-				let toLine = sectionInfo.lineStart - 1
-				if (toLine < 0) { // when codeblock on the frist line
+				ev.preventDefault(); // safe: tested: `prevent` can still trigger `onChange`
+				let toLine = sectionInfo.lineStart - 1;
+				if (toLine < 0) {
+					// when codeblock on the frist line
 					// strategy1: only move to start
 					// toLine = 0
 
 					// strategy2: insert a blank line
-					toLine = 0
-					this.editor.replaceRange("\n", { line: 0, ch: 0 })
+					toLine = 0;
+					this.editor.replaceRange('\n', { line: 0, ch: 0 });
 				}
-				this.editor.setCursor(toLine, 0)
-				this.editor.focus()
-				return
+				this.editor.setCursor(toLine, 0);
+				this.editor.focus();
+				return;
 			}
 			/*else if (ev.key == 'ArrowRight') {
 				if (cb_down) { cb_down(ev); return }
@@ -141,7 +166,7 @@ export default class EditableCodeblockInOb extends EditableCodeblock {
 					// TODO
 					return
 				}
-				
+
 				const sectionInfo = this.ctx.getSectionInfo(this.el);
 				if (!sectionInfo) return
 
@@ -190,7 +215,7 @@ export default class EditableCodeblockInOb extends EditableCodeblock {
 				this.editor.focus()
 				return
 			}*/
-		})
+		});
 	}
 
 	override async emit_save(isUpdateLanguage: boolean = true, isUpdateSource: boolean = true): Promise<void> {
@@ -198,8 +223,8 @@ export default class EditableCodeblockInOb extends EditableCodeblock {
 		 * @deprecated You should use `saveContent_safe` version
 		 */
 		const saveContent_debounced = debounce(async (isUpdateLanguage: boolean = true, isUpdateSource: boolean = true) => {
-			void this.emit_save_unsafe(isUpdateLanguage, isUpdateSource)
-		}, 200)
+			void this.emit_save_unsafe(isUpdateLanguage, isUpdateSource);
+		}, 200);
 
 		// [!code warn:3] The exception caused by the transaction cannot be caught.
 		// If it fails here, there will be an error print
@@ -209,10 +234,9 @@ export default class EditableCodeblockInOb extends EditableCodeblock {
 		// } catch {
 		// }
 		if (this.settings.saveMode == 'oninput') {
-			void this.emit_save_unsafe(isUpdateLanguage, isUpdateSource)
-		}
-		else if (this.settings.saveMode == 'onchange') {
-			void saveContent_debounced(isUpdateLanguage, isUpdateSource)
+			void this.emit_save_unsafe(isUpdateLanguage, isUpdateSource);
+		} else if (this.settings.saveMode == 'onchange') {
+			void saveContent_debounced(isUpdateLanguage, isUpdateSource);
 		}
 	}
 
@@ -224,7 +248,7 @@ export default class EditableCodeblockInOb extends EditableCodeblock {
 		// range
 		const sectionInfo = this.ctx.getSectionInfo(this.el);
 		if (!sectionInfo) {
-			LLOG.error("Warning: without el section!")
+			LLOG.error('Warning: without el section!');
 			return;
 		}
 		// sectionInfo.lineStart; // index in (```<language>)
@@ -232,86 +256,184 @@ export default class EditableCodeblockInOb extends EditableCodeblock {
 
 		// editor
 		if (!this.editor) {
-			LLOG.error("Warning: without editor!")
+			LLOG.error('Warning: without editor!');
 			return;
 		}
 
 		// change - language
 		if (isUpdateLanguage) {
 			this.editor.transaction({
-				changes: [{
-					from: {line: sectionInfo.lineStart, ch: 0},
-					to: {line: sectionInfo.lineStart+1, ch: 0},
-					text: this.outerInfo.flag + this.outerInfo.language_type + this.outerInfo.language_meta + '\n'
-				}],
+				changes: [
+					{
+						from: { line: sectionInfo.lineStart, ch: 0 },
+						to: { line: sectionInfo.lineStart + 1, ch: 0 },
+						text: this.outerInfo.flag + this.outerInfo.language_type + this.outerInfo.language_meta + '\n',
+					},
+				],
 			});
 		}
 
 		// change - source
 		if (isUpdateSource) {
 			this.editor.transaction({
-				changes: [{
-					from: {line: sectionInfo.lineStart+1, ch: 0},
-					to: {line: sectionInfo.lineEnd, ch: 0},
-					text: (this.outerInfo.source ?? this.innerInfo.source_old) + '\n'
-				}],
+				changes: [
+					{
+						from: { line: sectionInfo.lineStart + 1, ch: 0 },
+						to: { line: sectionInfo.lineEnd, ch: 0 },
+						text: (this.outerInfo.source ?? this.innerInfo.source_old) + '\n',
+					},
+				],
 			});
 		}
 	}
 
+	// ---------------------- theme detection -------------------------
+
+	private getCurrentTheme(): string {
+		// 方法1：通过 Obsidian API 获取主题名称
+		try {
+			// @ts-ignore
+			const app = (window as any).app;
+			if (app && app.customCss && app.customCss.theme) {
+				const themeName = app.customCss.theme;
+				// console.log('通过 Obsidian API 获取主题:', themeName);
+				return themeName;
+			}
+		} catch (error) {
+			console.log('无法通过 API 获取主题:', error);
+		}
+
+		// 方法2：通过 DOM 检测主题类名
+		const bodyClasses = document.body.className;
+		// console.log('Body classes:', bodyClasses);
+
+		// 特殊主题检测
+		if (bodyClasses.includes('minimal-theme')) {
+			return 'minimal';
+		}
+		if (bodyClasses.includes('things-theme')) {
+			return 'things';
+		}
+		if (bodyClasses.includes('anuppuccin')) {
+			return 'anuppuccin';
+		}
+		if (bodyClasses.includes('california-coast')) {
+			return 'california-coast';
+		}
+		if (bodyClasses.includes('composer')) {
+			return 'composer';
+		}
+
+		// 提取主题名称（通常以 theme- 开头）
+		const themeMatch = bodyClasses.match(/theme-([a-zA-Z0-9-_]+)/);
+		if (themeMatch) {
+			return themeMatch[1];
+		}
+
+		// 检测明暗主题
+		if (bodyClasses.includes('theme-dark')) {
+			return 'dark';
+		} else if (bodyClasses.includes('theme-light')) {
+			return 'light';
+		}
+
+		return 'default';
+	}
+
+	applyThemeClass(container: HTMLElement): void {
+		const currentTheme = this.getCurrentTheme();
+
+		// 主题名称标准化处理
+		let normalizedTheme = currentTheme
+			.toLowerCase()
+			.replace(/\s+/g, '-') // 空格转换为连字符
+			.replace(/[^a-z0-9-]/g, ''); // 移除特殊字符
+
+		container.setAttribute('data-theme', normalizedTheme);
+		container.classList.add(`shiki-theme-${normalizedTheme}`);
+
+		// console.log('Shiki主题检测:', {
+		// 	originalTheme: currentTheme,
+		// 	normalizedTheme: normalizedTheme,
+		// 	bodyClasses: document.body.className,
+		// 	appliedClass: `shiki-theme-${normalizedTheme}`,
+		// 	containerClasses: container.className
+		// });
+	}
+
+	observeThemeChanges(container: HTMLElement): void {
+		const observer = new MutationObserver(() => {
+			const newTheme = this.getCurrentTheme();
+			const normalizedTheme = newTheme
+				.toLowerCase()
+				.replace(/\s+/g, '-') // 空格转换为连字符
+				.replace(/[^a-z0-9-]/g, ''); // 移除特殊字符
+			container.setAttribute('data-theme', normalizedTheme);
+			container.className = container.className.replace(/shiki-theme-[a-zA-Z0-9-_]+/g, '');
+			container.classList.add(`shiki-theme-${normalizedTheme}`);
+		});
+
+		observer.observe(document.body, {
+			attributes: true,
+			attributeFilter: ['class'],
+		});
+
+		setTimeout(() => observer.disconnect(), 300000); // 5分钟后自动清理
+	}
+
 	// ---------------------- ex, no override -------------------------
 
-	private init_outerInfo2(language_old:string, source_old:string, el:HTMLElement, ctx: MarkdownPostProcessorContext): OuterInfo {
+	private init_outerInfo2(language_old: string, source_old: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): OuterInfo {
 		const sectionInfo = ctx.getSectionInfo(el);
 		if (!sectionInfo) {
 			// This is possible. when rerender
-			const outerInfo:OuterInfo = {
+			const outerInfo: OuterInfo = {
 				prefix: '',
 				flag: '', // null flag
 				language_meta: '',
 				language_type: language_old,
 				source: null, // null flag
-			}
-			return outerInfo
+			};
+			return outerInfo;
 		}
 		// sectionInfo.lineStart; // index in (```<language>)
 		// sectionInfo.lineEnd;   // index in (```), Let's not modify the fence part
 
-		const lines = sectionInfo.text.split('\n')
+		const lines = sectionInfo.text.split('\n');
 		if (lines.length < sectionInfo.lineStart + 1 || lines.length < sectionInfo.lineEnd + 1) {
 			// This is impossible.
 			// Unless obsidian makes a mistake.
-			LLOG.error('Warning: el ctx error!')
+			LLOG.error('Warning: el ctx error!');
 		}
 
-		const firstLine = lines[sectionInfo.lineStart]
-		const match = reg_code.exec(firstLine)
+		const firstLine = lines[sectionInfo.lineStart];
+		const match = reg_code.exec(firstLine);
 		if (!match) {
 			// This is possible.
 			// When the code block is nested and the first line is not a code block
 			// (The smallest section of getSectionInfo is `markdown-preview-section>div`)
-			const outerInfo:OuterInfo = {
+			const outerInfo: OuterInfo = {
 				prefix: '',
 				flag: '', // null flag
 				language_meta: '',
 				language_type: language_old,
 				source: null, // null flag
-			}
-			return outerInfo
+			};
+			return outerInfo;
 		}
 
-		const outerInfo:OuterInfo = {
+		const outerInfo: OuterInfo = {
 			prefix: match[1],
 			flag: match[3],
 			language_meta: match[5],
 			language_type: match[4],
 			source: lines.slice(sectionInfo.lineStart + 1, sectionInfo.lineEnd).join('\n'),
-		}
-		return outerInfo
+		};
+		return outerInfo;
 	}
 
 	/** editable callout
-	 * 
+	 *
 	 * onCall: language.startWith('sk-')
 	 */
 	renderCallout(): void {
@@ -326,79 +448,100 @@ export default class EditableCodeblockInOb extends EditableCodeblock {
 		//   - divEditBtn
 
 		const renderMarkdown = (targetEl: HTMLElement): Promise<void> => {
-			targetEl.innerHTML = ''
-			const divRender = document.createElement('div'); targetEl.appendChild(divRender); divRender.classList.add('markdown-rendered');
+			targetEl.innerHTML = '';
+			const divRender = document.createElement('div');
+			targetEl.appendChild(divRender);
+			divRender.classList.add('markdown-rendered');
 			const mdrc: MarkdownRenderChild = new MarkdownRenderChild(divRender);
-			return MarkdownRenderer.render(this.plugin.app, this.outerInfo.source ?? this.innerInfo.source_old, divRender, this.plugin.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path??"", mdrc)
-		}
+			return MarkdownRenderer.render(
+				this.plugin.app,
+				this.outerInfo.source ?? this.innerInfo.source_old,
+				divRender,
+				this.plugin.app.workspace.getActiveViewOfType(MarkdownView)?.file?.path ?? '',
+				mdrc,
+			);
+		};
 
 		// div
-		const div = document.createElement('div'); this.el.appendChild(div); div.classList.add(
-			'cm-preview-code-block', 'cm-embed-block', 'markdown-rendered', 'admonition-parent', 'admonition-tip-parent',
-		)
+		const div = document.createElement('div');
+		this.el.appendChild(div);
+		div.classList.add('cm-preview-code-block', 'cm-embed-block', 'markdown-rendered', 'admonition-parent', 'admonition-tip-parent');
 
 		// divCallout
-		const divCallout = document.createElement('div'); div.appendChild(divCallout); divCallout.classList.add(
-			'callout', 'admonition', 'admonition-tip', 'admonition-plugin'
-		);
-		divCallout.setAttribute('data-callout', this.outerInfo.language_type.slice(3)); divCallout.setAttribute('data-callout-fold', ''); divCallout.setAttribute('data-callout-metadata', '')
+		const divCallout = document.createElement('div');
+		div.appendChild(divCallout);
+		divCallout.classList.add('callout', 'admonition', 'admonition-tip', 'admonition-plugin');
+		divCallout.setAttribute('data-callout', this.outerInfo.language_type.slice(3));
+		divCallout.setAttribute('data-callout-fold', '');
+		divCallout.setAttribute('data-callout-metadata', '');
 
 		// divTitle
-		const divTitle = document.createElement('div'); divCallout.appendChild(divTitle); divTitle.classList.add('callout-title', 'admonition-title');
-		const divIcon = document.createElement('div'); divTitle.appendChild(divIcon); divIcon.classList.add('callout-icon', 'admonition-title-icon');
-		divIcon.innerHTML = `<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="fire" class="svg-inline--fa fa-fire fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M216 23.86c0-23.8-30.65-32.77-44.15-13.04C48 191.85 224 200 224 288c0 35.63-29.11 64.46-64.85 63.99-35.17-.45-63.15-29.77-63.15-64.94v-85.51c0-21.7-26.47-32.23-41.43-16.5C27.8 213.16 0 261.33 0 320c0 105.87 86.13 192 192 192s192-86.13 192-192c0-170.29-168-193-168-296.14z"></path></svg>`
-		const divInner = document.createElement('div'); divTitle.appendChild(divInner); divInner.classList.add('callout-title-inner', 'admonition-title-content');
-		divInner.textContent = this.outerInfo.language_type.slice(3)
+		const divTitle = document.createElement('div');
+		divCallout.appendChild(divTitle);
+		divTitle.classList.add('callout-title', 'admonition-title');
+		const divIcon = document.createElement('div');
+		divTitle.appendChild(divIcon);
+		divIcon.classList.add('callout-icon', 'admonition-title-icon');
+		divIcon.innerHTML = `<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="fire" class="svg-inline--fa fa-fire fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M216 23.86c0-23.8-30.65-32.77-44.15-13.04C48 191.85 224 200 224 288c0 35.63-29.11 64.46-64.85 63.99-35.17-.45-63.15-29.77-63.15-64.94v-85.51c0-21.7-26.47-32.23-41.43-16.5C27.8 213.16 0 261.33 0 320c0 105.87 86.13 192 192 192s192-86.13 192-192c0-170.29-168-193-168-296.14z"></path></svg>`;
+		const divInner = document.createElement('div');
+		divTitle.appendChild(divInner);
+		divInner.classList.add('callout-title-inner', 'admonition-title-content');
+		divInner.textContent = this.outerInfo.language_type.slice(3);
 
 		// divContent
-		const divContent = document.createElement('div'); divCallout.appendChild(divContent); divContent.classList.add('callout-content', 'admonition-content');
+		const divContent = document.createElement('div');
+		divCallout.appendChild(divContent);
+		divContent.classList.add('callout-content', 'admonition-content');
 		if (this.isReadingMode || this.isMarkdownRendered) {
-			void renderMarkdown(divContent)
+			void renderMarkdown(divContent);
 		}
 
 		// divEditBtn
-		const divEditBtn = document.createElement('div'); div.appendChild(divEditBtn); divEditBtn.classList.add('edit-block-button')
-		divEditBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-code-2"><path d="m18 16 4-4-4-4"></path><path d="m6 8-4 4 4 4"></path><path d="m14.5 4-5 16"></path></svg>`
+		const divEditBtn = document.createElement('div');
+		div.appendChild(divEditBtn);
+		divEditBtn.classList.add('edit-block-button');
+		divEditBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-code-2"><path d="m18 16 4-4-4-4"></path><path d="m6 8-4 4 4 4"></path><path d="m14.5 4-5 16"></path></svg>`;
 
 		// #region divContent async part
 		if (!this.isReadingMode && !this.isMarkdownRendered) {
 			this.editor = this.plugin.app.workspace.activeEditor?.editor ?? null; // 这里，通常初始化和现在的activeEditor都拿不到editor，不知道为什么
-			const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView)
-			if (view) this.editor = view.editor
-			
+			const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+			if (view) this.editor = view.editor;
+
 			const embedEditor = (): void => {
-				divContent.innerHTML = ''
-				
+				divContent.innerHTML = '';
+
 				const EmbedEditor: new (...args: any[]) => any = getEmbedEditor(
 					this.plugin.app,
 					(cm: EditorView) => {
-						this.outerInfo.source = cm.state.doc.toString()
-						void renderMarkdown(divContent) // if save but nochange, will not rerender. So it is needed.
+						this.outerInfo.source = cm.state.doc.toString();
+						void renderMarkdown(divContent); // if save but nochange, will not rerender. So it is needed.
 
 						// global_isLiveMode_cache = false // TODO can add option, default cm or readmode
-						div.classList.remove('is-no-saved'); void this.emit_save(false, true);
+						div.classList.remove('is-no-saved');
+						void this.emit_save(false, true);
 					},
 					(cm: EditorView) => {
-						this.outerInfo.source = cm.state.doc.toString()
+						this.outerInfo.source = cm.state.doc.toString();
 
 						// global_isLiveMode_cache = true // TODO can add option, default cm or readmode
-						div.classList.remove('is-no-saved'); void this.emit_save(false, true);
+						div.classList.remove('is-no-saved');
+						void this.emit_save(false, true);
 					},
 					(update: ViewUpdate, changed: boolean) => {
-						if (!changed) return
+						if (!changed) return;
 						div.classList.add('is-no-saved');
 					},
-				)
+				);
 
 				if (EmbedEditor) {
 					// Strategy 1: use `class EmbedEditor extends MarkdownEditor`
-					const obView: MarkdownView|null = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
-					const controller = makeFakeController(this.plugin.app, obView??null, () => this.editor)
-					const embedEditor: Editor = new EmbedEditor(this.plugin.app, divContent, controller)
+					const obView: MarkdownView | null = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+					const controller = makeFakeController(this.plugin.app, obView ?? null, () => this.editor);
+					const embedEditor: Editor = new EmbedEditor(this.plugin.app, divContent, controller);
 					// @ts-expect-error without set, if no set, cm style invalid
-					embedEditor.set(this.outerInfo.source ?? '')
-				}
-				else {
+					embedEditor.set(this.outerInfo.source ?? '');
+				} else {
 					// Strategy 4 use ob extensions, but without ob style
 					const cmState = EditorState.create({
 						doc: this.outerInfo.source ?? this.innerInfo.source_old,
@@ -411,32 +554,36 @@ export default class EditableCodeblockInOb extends EditableCodeblock {
 									this.outerInfo.source = update.state.doc.toString();
 									div.classList.add('is-no-saved');
 								}
-							})
-						]
-					})
-					new EditorView({ // const cmView =
+							}),
+						],
+					});
+					new EditorView({
+						// const cmView =
 						state: cmState,
-						parent: divContent // targetEl
-					})
+						parent: divContent, // targetEl
+					});
 					// async
-					const elCmEditor: HTMLElement|null = divContent.querySelector('div[contenteditable=true]')
+					const elCmEditor: HTMLElement | null = divContent.querySelector('div[contenteditable=true]');
 					if (!elCmEditor) {
-						LLOG.warn('can\'t find elCmEditor')
-						return
+						LLOG.warn("can't find elCmEditor");
+						return;
 					}
-					elCmEditor.focus()
+					elCmEditor.focus();
 					elCmEditor.addEventListener('blur', (): void => {
-						void renderMarkdown(divContent) // if save but nochange, will not rerender. So it is needed.
+						void renderMarkdown(divContent); // if save but nochange, will not rerender. So it is needed.
 
-						div.classList.remove('is-no-saved'); void this.emit_save(false, true);
-					})
+						div.classList.remove('is-no-saved');
+						void this.emit_save(false, true);
+					});
 				}
-			}
+			};
 
 			// if (global_isLiveMode_cache) {
 			// global_isLiveMode_cache = false // TODO can add option, default cm or readmode
-			embedEditor()
-			divContent.addEventListener('dblclick', () => { embedEditor() })
+			embedEditor();
+			divContent.addEventListener('dblclick', () => {
+				embedEditor();
+			});
 		}
 		// #endregion
 	}

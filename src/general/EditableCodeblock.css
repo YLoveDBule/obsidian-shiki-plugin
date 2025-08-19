@@ -22,53 +22,53 @@ var(--code-size)
 	--vp-c-gray-1: #dddde3;
 	--vp-c-gray-2: #e4e4e9;
 	--vp-c-gray-3: #ebebef;
-	--vp-c-gray-soft: rgba(142, 150, 170, .14);
+	--vp-c-gray-soft: rgba(142, 150, 170, 0.14);
 	--vp-c-indigo-1: #3451b2;
 	--vp-c-indigo-2: #3a5ccc;
 	--vp-c-indigo-3: #5672cd;
-	--vp-c-indigo-soft: rgba(100, 108, 255, .14);
+	--vp-c-indigo-soft: rgba(100, 108, 255, 0.14);
 	--vp-c-purple-1: #6f42c1;
 	--vp-c-purple-2: #7e4cc9;
 	--vp-c-purple-3: #8e5cd9;
-	--vp-c-purple-soft: rgba(159, 122, 234, .14);
-	--vp-c-green-1: #18794e;;
+	--vp-c-purple-soft: rgba(159, 122, 234, 0.14);
+	--vp-c-green-1: #18794e;
 	--vp-c-green-2: #299764;
 	--vp-c-green-3: #30a46c;
-	--vp-c-green-soft: rgba(16, 185, 129, .14);;
+	--vp-c-green-soft: rgba(16, 185, 129, 0.14);
 	--vp-c-yellow-1: #915930;
 	--vp-c-yellow-2: #946300;
 	--vp-c-yellow-3: #9f6a00;
-	--vp-c-yellow-soft: rgba(234, 179, 8, .14);
+	--vp-c-yellow-soft: rgba(234, 179, 8, 0.14);
 	--vp-c-red-1: #b8272c;
 	--vp-c-red-2: #d5393e;
 	--vp-c-red-3: #e0575b;
-	--vp-c-red-soft: rgba(244, 63, 94, .14);
+	--vp-c-red-soft: rgba(244, 63, 94, 0.14);
 }
 .dark {
 	--vp-c-gray-1: #515c67;
 	--vp-c-gray-2: #414853;
 	--vp-c-gray-3: #32363f;
-	--vp-c-gray-soft: rgba(101, 117, 133, .16);
+	--vp-c-gray-soft: rgba(101, 117, 133, 0.16);
 	--vp-c-indigo-1: #a8b1ff;
 	--vp-c-indigo-2: #5c73e7;
 	--vp-c-indigo-3: #3e63dd;
-	--vp-c-indigo-soft: rgba(100, 108, 255, .16);
+	--vp-c-indigo-soft: rgba(100, 108, 255, 0.16);
 	--vp-c-purple-1: #c8abfa;
 	--vp-c-purple-2: #a879e6;
 	--vp-c-purple-3: #8e5cd9;
-	--vp-c-purple-soft: rgba(159, 122, 234, .16);
-	--vp-c-green-1: #3dd68c;;
+	--vp-c-purple-soft: rgba(159, 122, 234, 0.16);
+	--vp-c-green-1: #3dd68c;
 	--vp-c-green-2: #30a46c;
 	--vp-c-green-3: #298459;
-	--vp-c-green-soft: rgba(16, 185, 129, .16);;
+	--vp-c-green-soft: rgba(16, 185, 129, 0.16);
 	--vp-c-yellow-1: #f9b44e;
 	--vp-c-yellow-2: #da8b17;
 	--vp-c-yellow-3: #a46a0a;
-	--vp-c-yellow-soft: rgba(234, 179, 8, .16);
-	--vp-c-red-1: #f66f81;;
+	--vp-c-yellow-soft: rgba(234, 179, 8, 0.16);
+	--vp-c-red-1: #f66f81;
 	--vp-c-red-2: #f14158;
 	--vp-c-red-3: #b62a3c;
-	--vp-c-red-soft: rgba(244, 63, 94, .16);;
+	--vp-c-red-soft: rgba(244, 63, 94, 0.16);
 }
 
 /* Adapt to color preset */
@@ -76,7 +76,7 @@ var(--code-size)
 	--vp-c-default-1: var(--vp-c-gray-1);
 	--vp-c-default-2: var(--vp-c-gray-2);
 	--vp-c-default-3: var(--vp-c-gray-3);
-	--vp-c-default-soft: var(--vp-c-gray-soft);;
+	--vp-c-default-soft: var(--vp-c-gray-soft);
 	--vp-c-brand-1: var(--vp-c-indigo-1);
 	--vp-c-brand-2: var(--vp-c-indigo-2);
 	--vp-c-brand-3: var(--vp-c-indigo-3);
@@ -90,10 +90,10 @@ var(--code-size)
 	--vp-c-note-2: var(--vp-c-brand-2);
 	--vp-c-note-3: var(--vp-c-brand-3);
 	--vp-c-note-soft: var(--vp-c-brand-soft);
-	--vp-c-success-1: var(--vp-c-green-1);;
+	--vp-c-success-1: var(--vp-c-green-1);
 	--vp-c-success-2: var(--vp-c-green-2);
 	--vp-c-success-3: var(--vp-c-green-3);
-	--vp-c-success-soft: var(--vp-c-green-soft);;
+	--vp-c-success-soft: var(--vp-c-green-soft);
 	--vp-c-important-1: var(--vp-c-purple-1);
 	--vp-c-important-2: var(--vp-c-purple-2);
 	--vp-c-important-3: var(--vp-c-purple-3);
@@ -101,21 +101,21 @@ var(--code-size)
 	--vp-c-warning-1: var(--vp-c-yellow-1);
 	--vp-c-warning-2: var(--vp-c-yellow-2);
 	--vp-c-warning-3: var(--vp-c-yellow-3);
-	--vp-c-warning-soft: var(--vp-c-yellow-soft);;
-	--vp-c-danger-1: var(--vp-c-red-1);;
+	--vp-c-warning-soft: var(--vp-c-yellow-soft);
+	--vp-c-danger-1: var(--vp-c-red-1);
 	--vp-c-danger-2: var(--vp-c-red-2);
 	--vp-c-danger-3: var(--vp-c-red-3);
-	--vp-c-danger-soft: var(--vp-c-red-soft);;
+	--vp-c-danger-soft: var(--vp-c-red-soft);
 	--vp-c-caution-1: var(--vp-c-red-1);
 	--vp-c-caution-2: var(--vp-c-red-2);
 	--vp-c-caution-3: var(--vp-c-red-3);
-	--vp-c-caution-soft: var(--vp-c-red-soft)
+	--vp-c-caution-soft: var(--vp-c-red-soft);
 }
 
 /* Adapt to vuepress */
 :root {
 	--vp-code-line-height: 1.7;
-	--vp-code-font-size: .875em;
+	--vp-code-font-size: 0.875em;
 	--vp-code-color: var(--vp-c-brand-1);
 	--vp-code-link-color: var(--vp-c-brand-1);
 	--vp-code-link-hover-color: var(--vp-c-brand-2);
@@ -124,108 +124,144 @@ var(--code-size)
 	--vp-code-block-bg: var(--vp-c-bg-alt);
 	--vp-code-block-divider-color: var(--vp-c-gutter);
 	--vp-code-lang-color: var(--vp-c-text-2);
-	--vp-code-line-highlight-color: var(--vp-c-default-soft);;
+	--vp-code-line-highlight-color: var(--vp-c-default-soft);
 	--vp-code-line-number-color: var(--vp-c-text-2);
-	--vp-code-line-diff-add-color: var(--vp-c-success-soft);;
-	--vp-code-line-diff-add-symbol-color: var(--vp-c-success-1);;
-	--vp-code-line-diff-remove-color: var(--vp-c-danger-soft);;
-	--vp-code-line-diff-remove-symbol-color: var(--vp-c-danger-1);;
-	--vp-code-line-warning-color: var(--vp-c-warning-soft);;
-	--vp-code-line-error-color: var(--vp-c-danger-soft);;
+	--vp-code-line-diff-add-color: var(--vp-c-success-soft);
+	--vp-code-line-diff-add-symbol-color: var(--vp-c-success-1);
+	--vp-code-line-diff-remove-color: var(--vp-c-danger-soft);
+	--vp-code-line-diff-remove-symbol-color: var(--vp-c-danger-1);
+	--vp-code-line-warning-color: var(--vp-c-warning-soft);
+	--vp-code-line-error-color: var(--vp-c-danger-soft);
 	--vp-code-copy-code-border-color: var(--vp-c-divider);
 	--vp-code-copy-code-bg: var(--vp-c-bg-soft);
 	--vp-code-copy-code-hover-border-color: var(--vp-c-divider);
 	--vp-code-copy-code-hover-bg: var(--vp-c-bg);
 	--vp-code-copy-code-active-text: var(--vp-c-text-2);
-	--vp-code-copy-copied-text-content: "Copied";
+	--vp-code-copy-copied-text-content: 'Copied';
 	--vp-code-tab-divider: var(--vp-code-block-divider-color);
 	--vp-code-tab-text-color: var(--vp-c-text-2);
 	--vp-code-tab-bg: var(--vp-code-block-bg);
 	--vp-code-tab-hover-text-color: var(--vp-c-text-1);
 	--vp-code-tab-active-text-color: var(--vp-c-text-1);
-	--vp-code-tab-active-bar-color: var(--vp-c-brand-1)
+	--vp-code-tab-active-bar-color: var(--vp-c-brand-1);
 }
 
 /* ----------------------------- line flag -------------------------- */
 
-code>span.line.diff {
-	transition: background-color .5s;
+code > span.line.diff {
+	transition: background-color 0.5s;
 	margin: 0 calc(-1 * var(--shiki-x-padding));
 	padding: 0 var(--shiki-x-padding);
 	width: calc(100% + 2 * var(--shiki-x-padding));
-	display: inline-block
+	display: inline-block;
 }
-code>span.line.diff:before {
+code > span.line.diff:before {
 	position: absolute;
 	left: 5px; /*old 10*/
 }
-code>span.line.diff.add {
+code > span.line.diff.add {
 	background-color: var(--vp-code-line-diff-add-color);
 }
-code>span.line.diff.add:before {
-	content: "+";
-	color: var(--vp-code-line-diff-add-symbol-color)
+code > span.line.diff.add:before {
+	content: '+';
+	color: var(--vp-code-line-diff-add-symbol-color);
 }
-code>span.line.diff.remove {
+code > span.line.diff.remove {
 	background-color: var(--vp-code-line-diff-remove-color);
 }
-code>span.line.diff.remove:before {
-	content: "-";
-	color: var(--vp-code-line-diff-remove-symbol-color)
+code > span.line.diff.remove:before {
+	content: '-';
+	color: var(--vp-code-line-diff-remove-symbol-color);
 }
-code>span.line.highlighted {
+code > span.line.highlighted {
 	background-color: var(--vp-code-line-highlight-color);
-	transition: background-color .5s;
+	transition: background-color 0.5s;
 	margin: 0 calc(-1 * var(--shiki-x-padding));
 	padding: 0 var(--shiki-x-padding);
 	width: calc(100% + 2 * var(--shiki-x-padding));
-	display: inline-block
+	display: inline-block;
 }
-code>span.line.highlighted.error {
-	background-color: var(--vp-code-line-error-color)
+code > span.line.highlighted.error {
+	background-color: var(--vp-code-line-error-color);
 }
-code>span.line.highlighted.warning {
-	background-color: var(--vp-code-line-warning-color)
+code > span.line.highlighted.warning {
+	background-color: var(--vp-code-line-warning-color);
 }
-.has-focused code>span.line:not(.focused),
-.has-focused-lines code>span.line:not(.has-focus) {
-	filter:blur(.095rem);
-	opacity:.4;
-	transition:filter .35s,opacity .35s
+.has-focused code > span.line:not(.focused),
+.has-focused-lines code > span.line:not(.has-focus) {
+	filter: blur(0.095rem);
+	opacity: 0.4;
+	transition:
+		filter 0.35s,
+		opacity 0.35s;
 }
-.has-focused code>span.line:not(.focused),
-.has-focused-lines code>span.line:not(.has-focus) {
-	opacity:.7;
-	transition:filter .35s,opacity .35s
+.has-focused code > span.line:not(.focused),
+.has-focused-lines code > span.line:not(.has-focus) {
+	opacity: 0.7;
+	transition:
+		filter 0.35s,
+		opacity 0.35s;
 }
-.has-focused:hover code>span.line:not(.focused),
-.has-focused-lines:hover code>span.line:not(.has-focus) {
-	filter:blur(0);
-	opacity:1
+.has-focused:hover code > span.line:not(.focused),
+.has-focused-lines:hover code > span.line:not(.has-focus) {
+	filter: blur(0);
+	opacity: 1;
 }
 
 /* ----------------------------- keep same in textarePre ------------ */
 
 /*
  * keep same: pre & textarea
- * 
+ *
  * It is necessary to ensure that the style of this part is not overwritten,
  * Otherwise, `textarea` and `code` won't align
  */
 :root {
 	--shiki-x-padding: 16px;
 	--shiki-line-height: 24px;
- }
-.editable-codeblock code, .editable-codeblock textarea {
+}
+.editable-codeblock code,
+.editable-codeblock textarea {
 	line-height: var(--shiki-line-height) !important;
 	tab-size: var(--indent-size) !important;
 	font-size: var(--code-size) !important;
 	font-family: var(--font-monospace) !important;
 	white-space: pre !important;
+	/* lock metrics exactly the same */
+	letter-spacing: normal !important;
+	word-spacing: normal !important;
+	font-variant-ligatures: none !important;
+	font-kerning: none !important;
+	font-feature-settings:
+		'liga' 0,
+		'calt' 0,
+		'kern' 0 !important;
+	text-rendering: geometricPrecision !important;
+	-webkit-font-smoothing: antialiased !important;
+	font-synthesis: none !important;
+	font-weight: 400 !important;
+	font-style: normal !important;
 }
-.editable-codeblock code::selection, .editable-codeblock textarea::selection {
+
+/* prevent theme tokens from changing glyph width */
+.editable-codeblock code span {
+	font-weight: 400 !important;
+	font-style: normal !important;
+	font-family: inherit !important;
+	letter-spacing: normal !important;
+	word-spacing: normal !important;
+	font-variant-ligatures: none !important;
+	font-kerning: none !important;
+	font-feature-settings:
+		'liga' 0,
+		'calt' 0,
+		'kern' 0 !important;
+	font-synthesis: none !important;
+}
+.editable-codeblock code::selection,
+.editable-codeblock textarea::selection {
 	background-color: var(--text-selection) !important;
-	color: currentColor !important
+	color: currentColor !important;
 }
 .editable-codeblock code {
 	display: block !important;
@@ -233,7 +269,16 @@ code>span.line.highlighted.warning {
 	padding: 0 !important;
 	border: 0 !important;
 }
-.editable-codeblock pre, .editable-codeblock textarea {
+.editable-codeblock pre,
+.editable-codeblock textarea,
+.editable-codeblock code {
+	font-weight: 400 !important;
+	font-style: normal !important;
+	-webkit-font-smoothing: antialiased !important;
+	font-synthesis: none !important;
+}
+.editable-codeblock pre,
+.editable-codeblock textarea {
 	display: block !important;
 	box-sizing: border-box !important;
 	margin: 0 !important;
@@ -243,8 +288,12 @@ code>span.line.highlighted.warning {
 	cursor: text;
 }
 /* edit-block-button > textarea > pre */
-.editable-codeblock pre { z-index: 0; }
-.editable-codeblock textarea { z-index: 0; }
+.editable-codeblock pre {
+	z-index: 0;
+}
+.editable-codeblock textarea {
+	z-index: 0;
+}
 /* fix black line zero height */
 .editable-codeblock code > span {
 	vertical-align: top !important;
@@ -265,7 +314,7 @@ code>span.line.highlighted.warning {
 	font-size: 13px;
 	opacity: 0.5;
 }
-.editable-codeblock .language-edit>input {
+.editable-codeblock .language-edit > input {
 	margin: 0;
 	padding: 0 14px;
 	border: none;
@@ -276,7 +325,7 @@ code>span.line.highlighted.warning {
 }
 
 /* chore fix: keep color magin zero */
-code>span.line {
+code > span.line {
 	line-height: var(--shiki-line-height);
 }
 
@@ -297,24 +346,76 @@ code>span.line {
 	resize: none;
 	overflow: auto;
 	background-color: transparent;
-	/* color: transparent; */
-	color: #ffffff22;
-	caret-color: #ffffffdd;
+	color: transparent !important;
+	/* 调试用：临时显示红色文本 */
+	/* color: rgba(255, 0, 0, 0.3) !important; */
+	caret-color: var(--text-normal, #ffffff);
+	padding: 12px var(--shiki-x-padding) !important;
+	box-sizing: border-box !important;
+}
+
+/* ----------------------------- theme-specific adjustments ------------ */
+
+/* 默认主题 */
+.shiki-theme-default .editable-codeblock textarea {
+	padding: 12px var(--shiki-x-padding) !important;
+}
+
+/* Obsidian 默认主题 */
+.shiki-theme-obsidian .editable-codeblock textarea {
+	padding: 12px var(--shiki-x-padding) !important;
+}
+
+/* Minimal 主题 */
+.shiki-theme-minimal .editable-codeblock textarea {
+	padding: 10px var(--shiki-x-padding) !important;
+}
+
+/* Things 主题 */
+.shiki-theme-things .editable-codeblock textarea {
+	padding: 14px var(--shiki-x-padding) !important;
+}
+
+/* AnuPpuccin 主题 */
+.shiki-theme-anuppuccin .editable-codeblock textarea {
+	padding: 12px var(--shiki-x-padding) !important;
+}
+
+/* California Coast 主题 */
+.shiki-theme-california-coast .editable-codeblock textarea {
+	padding: 13px var(--shiki-x-padding) !important;
+}
+
+/* Composer 主题 */
+.shiki-theme-composer .editable-codeblock textarea {
+	padding: 12px var(--shiki-x-padding) !important;
+}
+
+/* 明暗主题通用调整 */
+.shiki-theme-dark .editable-codeblock textarea {
+	caret-color: #ffffff !important;
+	padding: 12px var(--shiki-x-padding) !important;
+}
+
+.shiki-theme-light .editable-codeblock textarea {
+	caret-color: #000000 !important;
+	padding: 12px var(--shiki-x-padding) !important;
 }
 .editable-codeblock textarea:focus {
 	/* outline: none; */
-	outline: 1px solid #0060DF;
+	outline: 1px solid #0060df;
 	border-radius: 4px;
 }
-.editable-codeblock pre:focus, .editable-codeblock pre:has(> code:focus) {
-	outline: 1px solid #0060DF;
+.editable-codeblock pre:focus,
+.editable-codeblock pre:has(> code:focus) {
+	outline: 1px solid #0060df;
 }
 .editable-codeblock code:focus {
 	outline: none;
 }
 
 .is-no-saved::before {
-	content: "";
+	content: '';
 	position: absolute;
 	width: 2px;
 	height: 100%;
@@ -323,6 +424,61 @@ code>span.line {
 	background-color: currentColor;
 	opacity: 0.5;
 	z-index: 10;
-	
+
 	/* border-left: solid 2px yellow !important; */
+}
+
+/* ----------------------------- copy button (reading mode) ----------- */
+/* container mark for positioning */
+.sk-codeblock {
+	position: relative;
+}
+
+/* hidden by default, show on hover */
+.sk-codeblock .sk-copy-btn {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	z-index: 50; /* ensure above EC frames */
+	padding: 4px 6px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-muted);
+	line-height: 1;
+	opacity: 0.6; /* visible by default for discoverability */
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+	pointer-events: auto;
+	transition:
+		opacity 0.2s ease,
+		background 0.2s ease,
+		color 0.2s ease,
+		border-color 0.2s ease;
+}
+
+.sk-codeblock:hover .sk-copy-btn {
+	opacity: 1;
+}
+
+.sk-codeblock .sk-copy-btn:hover {
+	color: var(--text-normal);
+	border-color: var(--background-modifier-border-hover, var(--background-modifier-border));
+	background: var(--background-primary-alt, var(--background-primary));
+	cursor: pointer;
+}
+
+/* ----------------------------- hide EC built-in copy button --------- */
+/*
+  Goal: Hide Expressive Code (plugin-frames) copy button everywhere (reading & editing)
+  Notes:
+  - Keep our own copy button `.sk-copy-btn` (attached to `.sk-codeblock` container)
+  - Target common EC selectors/attributes to be robust across versions
+*/
+.expressive-code .copy,
+.expressive-code .copy *,
+.expressive-code button[title='Copy to clipboard'],
+.expressive-code button[data-copied],
+.expressive-code .ec-toolbar button[aria-label='Copy code'],
+.expressive-code .ec-toolbar .copy {
+	display: none !important;
 }

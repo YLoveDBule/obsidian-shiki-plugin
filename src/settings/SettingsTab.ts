@@ -25,14 +25,14 @@ export class ShikiSettingsTab extends PluginSettingTab {
 
 		this.containerEl.createEl('a', {
 			text: 'Settings Panel Document',
-			href: 'https://github.com/mProjectsCode/obsidian-shiki-plugin/blob/master/docs/README.md'
+			href: 'https://github.com/mProjectsCode/obsidian-shiki-plugin/blob/master/docs/README.md',
 		});
 		this.containerEl.createEl('span', {
-			text: ' | '
-		})
+			text: ' | ',
+		});
 		this.containerEl.createEl('a', {
 			text: 'Visual select theme',
-			href: 'https://textmate-grammars-themes.netlify.app'
+			href: 'https://textmate-grammars-themes.netlify.app',
 		});
 
 		new Setting(this.containerEl)
@@ -65,11 +65,11 @@ export class ShikiSettingsTab extends PluginSettingTab {
 			.setDesc('Select the render engine for the code blocks.')
 			.addDropdown(dropdown => {
 				dropdown.addOptions({
-					'shiki': 'Shiki',
-					'prismjs': 'PrismJs',
+					shiki: 'Shiki',
+					prismjs: 'PrismJs',
 				});
 				dropdown.setValue(this.plugin.settings.renderEngine).onChange(async value => {
-					this.plugin.settings.renderEngine = value as 'shiki'|'prismjs';
+					this.plugin.settings.renderEngine = value as 'shiki' | 'prismjs';
 					await this.plugin.saveSettings();
 				});
 			});
@@ -79,13 +79,13 @@ export class ShikiSettingsTab extends PluginSettingTab {
 			.setDesc('Select the render mode for the code blocks.')
 			.addDropdown(dropdown => {
 				dropdown.addOptions({
-					'textarea': 'textarea pre',
-					'pre': 'pre',
-					'editablePre': 'editable pre (beta)',
-					'codemirror': 'codemirror',
+					textarea: 'textarea pre',
+					pre: 'pre',
+					editablePre: 'editable pre (beta)',
+					codemirror: 'codemirror',
 				});
 				dropdown.setValue(this.plugin.settings.renderMode).onChange(async value => {
-					this.plugin.settings.renderMode = value as 'textarea'|'pre'|'editablePre'|'codemirror';
+					this.plugin.settings.renderMode = value as 'textarea' | 'pre' | 'editablePre' | 'codemirror';
 					await this.plugin.saveSettings();
 				});
 			});
@@ -95,11 +95,11 @@ export class ShikiSettingsTab extends PluginSettingTab {
 			.setDesc('Select the auto save mode for the code blocks.')
 			.addDropdown(dropdown => {
 				dropdown.addOptions({
-					'onchange': 'when change',
-					'oninput': 'when input',
+					onchange: 'when change',
+					oninput: 'when input',
 				});
 				dropdown.setValue(this.plugin.settings.saveMode).onChange(async value => {
-					this.plugin.settings.saveMode = value as 'onchange'|'oninput';
+					this.plugin.settings.saveMode = value as 'onchange' | 'oninput';
 					await this.plugin.saveSettings();
 				});
 			});

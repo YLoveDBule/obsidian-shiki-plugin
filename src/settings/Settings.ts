@@ -3,9 +3,9 @@ export interface Settings {
 	customThemeFolder: string;
 	customLanguageFolder: string;
 	theme: string;
-	renderMode: 'textarea'|'pre'|'editablePre'|'codemirror';
-	renderEngine: 'shiki'|'prismjs';
-	saveMode: 'onchange'|'oninput',
+	renderMode: 'textarea' | 'pre' | 'editablePre' | 'codemirror';
+	renderEngine: 'shiki' | 'prismjs';
+	saveMode: 'onchange' | 'oninput';
 	preferThemeColors: boolean;
 	inlineHighlighting: boolean;
 }

@@ -36,11 +36,13 @@ export class CodeHighlighter {
 	themeMapper: ThemeMapper;
 
 	ec!: ExpressiveCodeEngine;
-	ecElements!: HTMLElement[];
+	ecElements: HTMLElement[] = [];
 	supportedLanguages!: string[];
 	shiki!: Highlighter;
 	customThemes!: CustomTheme[];
 	customLanguages!: LanguageRegistration[];
+	private tokenCache: Map<string, TokensResult> = new Map();
+	private readonly cacheLimit = 200;
 
 	constructor(plugin: ShikiPlugin) {
 		this.plugin = plugin;
@@ -51,10 +53,10 @@ export class CodeHighlighter {
 		await this.loadCustomThemes();
 		await this.loadCustomLanguages();
 
-		await this.loadEC();
-		await this.loadShiki();
-
+		// Defer heavy engine initialization until first actual use
+		// Just compute supported languages up front
 		this.supportedLanguages = [...Object.keys(bundledLanguages), ...this.customLanguages.map(i => i.name)];
+		this.tokenCache.clear();
 	}
 
 	async unload(): Promise<void> {
@@ -137,7 +139,7 @@ export class CodeHighlighter {
 		this.customThemes.sort((a, b) => a.displayName.localeCompare(b.displayName));
 	}
 
-	async loadEC(): Promise<void> {
+	private async loadEC(): Promise<void> {
 		this.ec = new ExpressiveCodeEngine({
 			themes: [new ExpressiveCodeTheme(await this.themeMapper.getThemeForEC())],
 			plugins: [
@@ -169,18 +171,35 @@ export class CodeHighlighter {
 	}
 
 	unloadEC(): void {
+		if (!this.ecElements || this.ecElements.length === 0) {
+			this.ecElements = [];
+			this.tokenCache.clear();
+			return;
+		}
 		for (const el of this.ecElements) {
 			el.remove();
 		}
 		this.ecElements = [];
+		this.tokenCache.clear();
 	}
 
-	async loadShiki(): Promise<void> {
+	private async loadShiki(): Promise<void> {
 		this.shiki = await createHighlighter({
 			themes: [await this.themeMapper.getTheme()],
 			langs: this.customLanguages,
-
 		});
+	}
+
+	private async ensureEC(): Promise<void> {
+		if (!this.ec) {
+			await this.loadEC();
+		}
+	}
+
+	private async ensureShiki(): Promise<void> {
+		if (!this.shiki) {
+			await this.loadShiki();
+		}
 	}
 
 	usesCustomTheme(): boolean {
@@ -199,6 +218,7 @@ export class CodeHighlighter {
 	 * Highlights code with EC and renders it to the passed container element.
 	 */
 	async renderWithEc(code: string, language: string, meta: string, container: HTMLElement): Promise<void> {
+		await this.ensureEC();
 		const result = await this.ec.render({
 			code,
 			language,
@@ -212,14 +232,42 @@ export class CodeHighlighter {
 		if (!this.obsidianSafeLanguageNames().includes(lang)) {
 			return undefined;
 		}
+		const key = this.cacheKey(code, lang, this.plugin.settings.theme);
+		const cached = this.tokenCache.get(key);
+		if (cached) return cached;
+		await this.ensureShiki();
 		// load bundled language when needed
 		if (!this.shiki.getLoadedLanguages().includes(lang)) {
 			await this.shiki.loadLanguage(lang as BundledLanguage);
 		}
-		return this.shiki.codeToTokens(code, {
+		const themeReg = await this.themeMapper.getTheme();
+		const result = this.shiki.codeToTokens(code, {
 			lang: lang as BundledLanguage,
-			theme: this.plugin.settings.theme,
+			theme: themeReg,
 		});
+		this.rememberCache(key, result);
+		return result;
+	}
+
+	private cacheKey(code: string, lang: string, theme: string): string {
+		return `${theme}|${lang}|${this.hash(code)}`;
+	}
+
+	private hash(str: string): number {
+		let h = 5381;
+		for (let i = 0; i < str.length; i++) {
+			h = (h * 33) ^ str.charCodeAt(i);
+		}
+		return h >>> 0;
+	}
+
+	private rememberCache(key: string, value: TokensResult): void {
+		if (this.tokenCache.size >= this.cacheLimit) {
+			// delete oldest entry (Map preserves insertion order)
+			const firstKey = this.tokenCache.keys().next().value as string | undefined;
+			if (firstKey) this.tokenCache.delete(firstKey);
+		}
+		this.tokenCache.set(key, value);
 	}
 
 	tokenToSpan(token: ThemedToken, parent: HTMLElement): void {

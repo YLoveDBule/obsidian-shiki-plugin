@@ -5,16 +5,16 @@ import { DEFAULT_SETTINGS, type Settings } from 'src/settings/Settings';
 import { ShikiSettingsTab } from 'src/settings/SettingsTab';
 import { filterHighlightAllPlugin } from 'src/PrismPlugin';
 import { CodeHighlighter } from 'src/Highlighter';
-import EditableCodeblock from 'src/general/EditableCodeblockInOb'
+import EditableCodeblock from 'src/general/EditableCodeblockInOb';
 
 declare module 'obsidian' {
 	interface MarkdownPostProcessorContext {
-		containerEl: HTMLElement,
-		el: HTMLElement
+		containerEl: HTMLElement;
+		el: HTMLElement;
 	}
 	interface Vault {
-		getConfig(arg: 'useTab'): boolean
-		getConfig(arg: 'tabSize'): number
+		getConfig(arg: 'useTab'): boolean;
+		getConfig(arg: 'tabSize'): number;
 	}
 }
 
@@ -28,6 +28,8 @@ export default class ShikiPlugin extends Plugin {
 	updateCm6Plugin!: () => Promise<void>;
 
 	codeBlockProcessors: MarkdownPostProcessor[] = [];
+	private pendingRerenders: Set<CodeBlock> = new Set();
+	private rerenderScheduled = false;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -48,20 +50,21 @@ export default class ShikiPlugin extends Plugin {
 		// when the start line with the language changes, and we need that for the EC meta string
 		this.registerEvent(
 			this.app.vault.on('modify', async file => {
-				// sleep 0 so that the code block context is updated before we rerender
-				await sleep(100);
-
 				if (file instanceof TFile) {
-					if (this.activeCodeBlocks.has(file.path)) {
-						for (const codeBlock of this.activeCodeBlocks.get(file.path)!) {
-							void codeBlock.rerenderOnNoteChange();
+					const blocks = this.activeCodeBlocks.get(file.path);
+					if (blocks && blocks.length) {
+						for (const codeBlock of blocks) {
+							this.scheduleRerender(codeBlock);
 						}
 					}
 				}
 			}),
 		);
 
-		await this.registerPrismPlugin();
+		// Only load Prism filter plugin when PrismJS render engine is selected
+		if (this.settings.renderEngine === 'prismjs') {
+			await this.registerPrismPlugin();
+		}
 	}
 
 	async reloadHighlighter(): Promise<void> {
@@ -90,12 +93,29 @@ export default class ShikiPlugin extends Plugin {
 		prism.plugins.filterHighlightAll.reject.addSelector('div.expressive-code pre code');
 	}
 
+	private scheduleRerender(codeBlock: CodeBlock): void {
+		this.pendingRerenders.add(codeBlock);
+		if (!this.rerenderScheduled) {
+			this.rerenderScheduled = true;
+			requestAnimationFrame(() => this.flushRerenders());
+		}
+	}
+
+	private async flushRerenders(): Promise<void> {
+		const batch = Array.from(this.pendingRerenders);
+		this.pendingRerenders.clear();
+		this.rerenderScheduled = false;
+		for (const block of batch) {
+			void block.rerenderOnNoteChange();
+		}
+	}
+
 	/**
 	 * param this.settings.renderMode 'textarea'/'pre'/'editablePre'/'codemirror'
 	 */
 	registerCodeBlockProcessors(): void {
 		const languages = this.highlighter.obsidianSafeLanguageNames();
-		languages.push('sk-tip', 'sk-note', 'sk-info', 'sk-warning', 'sk-error')
+		languages.push('sk-tip', 'sk-note', 'sk-info', 'sk-warning', 'sk-error');
 
 		for (const language of languages) {
 			try {
@@ -103,12 +123,13 @@ export default class ShikiPlugin extends Plugin {
 					language,
 					async (source, el, ctx) => {
 						// check env
-						const isReadingMode: boolean = ctx.containerEl.hasClass('markdown-preview-section') || ctx.containerEl.hasClass('markdown-preview-view');
+						const isReadingMode: boolean =
+							ctx.containerEl.hasClass('markdown-preview-section') || ctx.containerEl.hasClass('markdown-preview-view');
 						// this seems to indicate whether we are in the pdf export mode
 						// sadly there is no section info in this mode
 						// thus we can't check if the codeblock is at the start of the note and thus frontmatter
 						// const isPdfExport = ctx.displayMode === true;
-						// 
+						//
 						// this is so that we leave the hidden frontmatter code block in reading mode alone
 						if (language === 'yaml' && isReadingMode && ctx.frontmatter) {
 							const sectionInfo = ctx.getSectionInfo(el);
@@ -117,25 +138,25 @@ export default class ShikiPlugin extends Plugin {
 								return;
 							}
 						}
-						
+
 						// able edit live
-						if (language.startsWith('sk-')) { // editable callout
-							const editableCodeblock = new EditableCodeblock(this, language, source, el, ctx)
-							editableCodeblock.renderCallout()
-							return
-						}
-						else if (this.settings.renderMode === 'textarea'
-							|| this.settings.renderMode === 'pre'
-							|| this.settings.renderMode === 'editablePre')
-						{
-							const editableCodeblock = new EditableCodeblock(this, language, source, el, ctx)
-							editableCodeblock.render()
-							return
-						}
-						else {
+						if (language.startsWith('sk-')) {
+							// editable callout
+							const editableCodeblock = new EditableCodeblock(this, language, source, el, ctx);
+							editableCodeblock.renderCallout();
+							return;
+						} else if (
+							this.settings.renderMode === 'textarea' ||
+							this.settings.renderMode === 'pre' ||
+							this.settings.renderMode === 'editablePre'
+						) {
+							const editableCodeblock = new EditableCodeblock(this, language, source, el, ctx);
+							editableCodeblock.render();
+							return;
+						} else {
 							const codeBlock = new CodeBlock(this, el, source, language, ctx);
-							ctx.addChild(codeBlock)
-							return
+							ctx.addChild(codeBlock);
+							return;
 						}
 					},
 					1000,

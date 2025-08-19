@@ -6,4 +6,11 @@ mock.module('obsidian', () => ({
 		// do nothing
 	},
 	moment: Moment,
+	Notice: class Notice {
+		message: string;
+		constructor(message: string) {
+			this.message = message;
+		}
+		hide(): void {}
+	},
 }));

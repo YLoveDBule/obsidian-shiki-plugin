@@ -7,45 +7,47 @@
  *   MarkdownEditor = Object.getPrototypeOf(Object.getPrototypeOf(md.editMode)).constructor; https://github.com/mgmeyers/obsidian-kanban/blob/main/src/main.ts#L41
  */
 
-import { insertBlankLine } from '@codemirror/commands'
-import { Prec, type Extension } from "@codemirror/state"
-import { EditorView, keymap, ViewUpdate } from "@codemirror/view"
-import { type App, type Editor, type TFile, type MarkdownView } from "obsidian"
+import { insertBlankLine } from '@codemirror/commands';
+import { Prec, type Extension } from '@codemirror/state';
+import { EditorView, keymap, ViewUpdate } from '@codemirror/view';
+import { type App, type Editor, type TFile, type MarkdownView } from 'obsidian';
 
 function getEditorClass(app: App): any {
 	// @ts-expect-error without embedRegistry
-	const md: any = app.embedRegistry.embedByExtension.md(
-		{ app: app, containerEl: createDiv(), state: {} },
-		null,
-		''
-	)
+	const md: any = app.embedRegistry.embedByExtension.md({ app: app, containerEl: createDiv(), state: {} }, null, '');
 
-	md.load()
-	md.editable = true
-	md.showEditor()
+	md.load();
+	md.editable = true;
+	md.showEditor();
 
 	const MarkdownEditor: any = Object.getPrototypeOf(Object.getPrototypeOf(md.editMode)).constructor;
 
-	md.unload()
+	md.unload();
 
-	return MarkdownEditor
+	return MarkdownEditor;
 }
 
 // 伪造 controller 对象 (构造错误不影响编辑功能，但影响保存功能)
 // 对应 ctx.containerEl div.cm-scroller
-export function makeFakeController(app: App, view: MarkdownView|null, getEditor: () => Editor|null): Record<any, any> {
+export function makeFakeController(app: App, view: MarkdownView | null, getEditor: () => Editor | null): Record<any, any> {
 	return {
 		app,
-		showSearch: (): void => { },
-		toggleMode: (): void => { },
-		onMarkdownScroll: (): void => { },
-		getMode: () => "source",
+		showSearch: (): void => {},
+		toggleMode: (): void => {},
+		onMarkdownScroll: (): void => {},
+		getMode: () => 'source',
 		scroll: 0,
 		editMode: null,
-		get editor(): Editor | null { return getEditor(); },
-		get file(): TFile | null | undefined { return view?.file; },
-		get path(): string { return view?.file?.path ?? ""; }
-	}
+		get editor(): Editor | null {
+			return getEditor();
+		},
+		get file(): TFile | null | undefined {
+			return view?.file;
+		},
+		get path(): string {
+			return view?.file?.path ?? '';
+		},
+	};
 }
 
 // let extensions: any = null // global
@@ -65,7 +67,7 @@ export function getEmbedEditor(
 ): any {
 	// if (extensions !== null) return extensions
 
-	const MarkdownEditor = getEditorClass(app)
+	const MarkdownEditor = getEditorClass(app);
 
 	class EmbedEditor extends MarkdownEditor {
 		buildLocalExtensions(): Extension[] {
@@ -87,7 +89,7 @@ export function getEmbedEditor(
 						// 	if (Platform.isMobile) {
 						// 		view.contentEl.addClass('is-mobile-editing');
 						// 	}
-			
+
 						// 	evt.win.setTimeout(() => {
 						// 		this.app.workspace.activeEditor = this.owner;
 						// 		if (Platform.isMobile) {
@@ -97,12 +99,12 @@ export function getEmbedEditor(
 						// 	return true;
 						// },
 						blur: (event: FocusEvent, view: EditorView) => {
-							emitSave(view)
+							emitSave(view);
 							return true;
 						},
-					})
-				)
-			)
+					}),
+				),
+			);
 
 			// 如果传入了 placeholder，则为编辑器设置输入占位符提示文字
 			// if (placeholder) extensions.push(placeholderExt(placeholder));
@@ -127,13 +129,15 @@ export function getEmbedEditor(
 							run: (cm: EditorView): boolean => {
 								// 根据 Obsidian 的智能缩进配置，决定换行方式
 								if (this.app.vault.getConfig('smartIndentList')) {
-									this.editor.newlineAndIndentContinueMarkdownList()
+									this.editor.newlineAndIndentContinueMarkdownList();
 								} else {
 									insertBlankLine(cm as any);
 								}
-								return true
+								return true;
 							},
-							shift: (): boolean => { return false },
+							shift: (): boolean => {
+								return false;
+							},
 							preventDefault: true,
 						},
 						{
@@ -141,37 +145,39 @@ export function getEmbedEditor(
 							run: (cm: EditorView): boolean => {
 								// 根据 Obsidian 的智能缩进配置，决定换行方式
 								if (this.app.vault.getConfig('smartIndentList')) {
-									this.editor.newlineAndIndentContinueMarkdownList()
+									this.editor.newlineAndIndentContinueMarkdownList();
 								} else {
 									insertBlankLine(cm as any);
 								}
-								return true
+								return true;
 							},
-							shift: (): boolean => { return true },
+							shift: (): boolean => {
+								return true;
+							},
 							preventDefault: true,
 						},
 						{
 							key: 'Escape',
 							run: (cm: EditorView): boolean => {
-								emitFinish(cm)
-								return false
+								emitFinish(cm);
+								return false;
 							},
 							preventDefault: true,
 						},
-					])
-				)
-			)
+					]),
+				),
+			);
 
 			return extensions;
 		}
 
 		onUpdate(update: ViewUpdate, changed: boolean): void {
-			super.onUpdate(update, changed)
-				onChange(update, changed)
+			super.onUpdate(update, changed);
+			onChange(update, changed);
 		}
 	}
 
-	return EmbedEditor
+	return EmbedEditor;
 }
 
 // old strategy backup

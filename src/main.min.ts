@@ -5,16 +5,16 @@ import { DEFAULT_SETTINGS, type Settings } from 'src/settings/Settings';
 // import { ShikiSettingsTab } from 'src/settings/SettingsTab';
 // import { filterHighlightAllPlugin } from 'src/PrismPlugin';
 // import { CodeHighlighter } from 'src/Highlighter';
-import EditableCodeblock from 'src/general/EditableCodeblockInOb'
+import EditableCodeblock from 'src/general/EditableCodeblockInOb';
 
 declare module 'obsidian' {
 	interface MarkdownPostProcessorContext {
-		containerEl: HTMLElement,
-		el: HTMLElement
+		containerEl: HTMLElement;
+		el: HTMLElement;
 	}
 	interface Vault {
-		getConfig(arg: 'useTab'): boolean
-		getConfig(arg: 'tabSize'): number
+		getConfig(arg: 'useTab'): boolean;
+		getConfig(arg: 'tabSize'): number;
 	}
 }
 
@@ -92,7 +92,7 @@ export default class ShikiPlugin extends Plugin {
 
 	registerCodeBlockProcessors(): void {
 		// const languages = this.highlighter.obsidianSafeLanguageNames();
-		const languages = ['js', 'ts', 'rust', 'c', 'cpp', 'java', 'shell', 'bash'] // [!code ++] TODO
+		const languages = ['js', 'ts', 'rust', 'c', 'cpp', 'java', 'shell', 'bash']; // [!code ++] TODO
 
 		for (const language of languages) {
 			try {
@@ -100,12 +100,13 @@ export default class ShikiPlugin extends Plugin {
 					language,
 					async (source, el, ctx) => {
 						// check env
-						const isReadingMode: boolean = ctx.containerEl.hasClass('markdown-preview-section') || ctx.containerEl.hasClass('markdown-preview-view');
+						const isReadingMode: boolean =
+							ctx.containerEl.hasClass('markdown-preview-section') || ctx.containerEl.hasClass('markdown-preview-view');
 						// this seems to indicate whether we are in the pdf export mode
 						// sadly there is no section info in this mode
 						// thus we can't check if the codeblock is at the start of the note and thus frontmatter
 						// const isPdfExport = ctx.displayMode === true;
-						// 
+						//
 						// this is so that we leave the hidden frontmatter code block in reading mode alone
 						if (language === 'yaml' && isReadingMode && ctx.frontmatter) {
 							const sectionInfo = ctx.getSectionInfo(el);
@@ -114,20 +115,21 @@ export default class ShikiPlugin extends Plugin {
 								return;
 							}
 						}
-						
+
 						// able edit live
-						if (language.startsWith('sk-')) { // editable callout
-							const editableCodeblock = new EditableCodeblock(this, language, source, el, ctx)
-							editableCodeblock.renderCallout()
-							return
+						if (language.startsWith('sk-')) {
+							// editable callout
+							const editableCodeblock = new EditableCodeblock(this, language, source, el, ctx);
+							editableCodeblock.renderCallout();
+							return;
 						}
 						// else if (this.settings.renderMode === 'textarea'
 						// 	|| this.settings.renderMode === 'pre'
 						// 	|| this.settings.renderMode === 'editablePre')
 						{
-							const editableCodeblock = new EditableCodeblock(this, language, source, el, ctx)
-							editableCodeblock.render()
-							return
+							const editableCodeblock = new EditableCodeblock(this, language, source, el, ctx);
+							editableCodeblock.render();
+							return;
 						}
 						// else {
 						// 	const codeBlock = new CodeBlock(this, el, source, language, ctx);
@@ -141,7 +143,7 @@ export default class ShikiPlugin extends Plugin {
 				console.warn(`Failed to register code block processor for ${language}.`, e);
 			}
 		}
-	}	
+	}
 
 	// registerInlineCodeProcessor(): void {
 	// 	this.registerMarkdownPostProcessor(async (el, ctx) => {

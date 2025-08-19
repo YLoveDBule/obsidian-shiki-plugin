@@ -1,6 +1,6 @@
 /* Direct editing of styles.css is not allowed. Instead, the file should be edited. */
 
-@import url("src/general/EditableCodeblock.css");
+@import url('src/general/EditableCodeblock.css');
 
 body {
 	--shiki-code-background: var(--code-background);
